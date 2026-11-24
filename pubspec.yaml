@@ -1,0 +1,35 @@
+name: ev_sharegrid
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_map: ^8.3.2
+  flutter_web_plugins:
+    sdk: flutter
+  go_router: ^17.5.0
+  google_fonts: ^6.2.1
+  http: ^1.2.0
+  latlong2: ^0.10.1
+  shared_preferences: ^2.5.6
+  url_launcher: ^6.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/fonts/roboto/OFL.txt
+    - ai_engine/samples/page20_input.json
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/roboto/Roboto-Variable.ttf
