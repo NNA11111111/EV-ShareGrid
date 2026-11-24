@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: ev_sharegrid_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-ev_sharegrid}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema_19_tables.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U '$$POSTGRES_USER' -d '$$POSTGRES_DB'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  ai-engine:
+    build:
+      context: ./ai_engine
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8001:8001"
+    volumes:
+      - ./ai_engine/models:/app/ai_engine/models
+    environment:
+      WORKERS: "1"
+      DEFAULT_TIME_BUDGET_MS: "10000"
+      DECOMPOSE_THRESHOLD: "250"
+      EV_VN_HOLIDAYS: "2026-01-01,2026-04-30,2026-05-01,2026-09-02"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+  catalog-seed:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "scripts/import_catalog.py"]
+    restart: "no"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ev_sharegrid}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ev_sharegrid}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AI_URL: ${AI_URL:-http://ai-engine:8001}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      AUTH_PASSWORD_HASHES_JSON: ${AUTH_PASSWORD_HASHES_JSON:?Set AUTH_PASSWORD_HASHES_JSON in .env}
+      CORS_ORIGINS:
+      CORS_ORIGIN_REGEX:
+      BENCHMARK_REPORT_PATH: ${BENCHMARK_REPORT_PATH:-/app/ai_engine/benchmark_real.json}
+    volumes:
+      - type: bind
+        source: ./ai_engine/benchmark_real.json
+        target: ${BENCHMARK_REPORT_PATH:-/app/ai_engine/benchmark_real.json}
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      catalog-seed:
+        condition: service_completed_successfully
+      ai-engine:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/', timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        API_BASE_URL: ${API_BASE_URL:-}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
