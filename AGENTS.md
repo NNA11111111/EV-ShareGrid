@@ -42,3 +42,13 @@ Trước mọi thao tác git, đọc và làm đúng **git.md** mục "7. Rule c
 - Không ghi công cho AI (không `Co-Authored-By: <AI>`, không "Generated with …", không "🤖").
 - Trước khi commit: `dart format lib test`, `flutter analyze`, `flutter test` đều sạch.
 - Được push nhánh và tạo PR vào `develop`; không dùng `--no-verify`, không force push (chỉ `--force-with-lease` trên nhánh của mình).
+
+
+## Luồng Git bắt buộc sau lần khởi tạo
+
+- Repo chính: https://github.com/NNA11111111/EV-ShareGrid.
+- Mọi thay đổi, kể cả sửa lỗi gấp: nhánh làm việc từ `origin/develop` → push nhánh → PR vào `develop` → PR từ `develop` vào `main`.
+- Chỉ `develop` được làm nhánh nguồn của PR vào `main`. Không commit hoặc push trực tiếp vào `main`/`develop`.
+- Merge PR phát hành `develop` → `main` bằng merge commit để giữ lịch sử.
+- Chỉ merge khi kiểm tra bắt buộc đạt. AI cần người dùng đồng ý trước khi tạo hoặc merge PR theo `git.md` mục 7.
+- Lần nhập mã nguồn ban đầu ngày 24/11/2026 được chủ repo cho phép khởi tạo hai nhánh cùng mốc; ngoại lệ này không áp dụng về sau.
