@@ -3,7 +3,7 @@
 Tài liệu chung cho cả nhóm (3 người) và cho AI mà mỗi người dùng (Claude, Cursor, Copilot, ChatGPT...).
 **AI: đọc kỹ mục [7. Rule cho AI](#7-rule-cho-ai) và làm đúng từng bước.**
 
-Repo: `https://github.com/monster9k/ev-sharegrid`
+Repo: `https://github.com/NNA11111111/EV-ShareGrid`
 
 ---
 
@@ -31,7 +31,7 @@ Năm điều cần nhớ:
 ## 2. Cài đặt lần đầu (mỗi người làm một lần)
 
 ```bash
-git clone https://github.com/monster9k/ev-sharegrid.git
+git clone https://github.com/NNA11111111/EV-ShareGrid.git
 cd ev-sharegrid
 
 # Danh tính: PHẢI là tài khoản GitHub của bạn, không phải tên AI
@@ -158,7 +158,7 @@ refactor(data): tách dữ liệu mẫu theo phân hệ
 2. Check xanh rồi chọn **Create a merge commit** (không squash, để giữ lịch sử).
 3. Deploy theo README: `flutter build web --release` rồi `firebase deploy --only hosting`.
 
-**Hotfix** (lỗi gấp trên bản đang chạy):
+**Hotfix** (quy trình cũ, được thay thế bởi quy tắc bắt buộc bên dưới):
 
 1. `git switch main && git pull --ff-only` → `git switch -c hotfix/<ten>`.
 2. Sửa, push, tạo PR vào `main`. Sau khi merge, tạo thêm PR `main` → `develop` để `develop` cũng có bản sửa.
@@ -261,7 +261,7 @@ Sau khi tạo PR, báo cho người dùng: link PR, và nhắc rằng khi 2 chec
 
 ---
 
-## 8. Cài đặt trên GitHub (đã bật)
+## 8. Cài đặt bảo vệ trên GitHub
 
 **Settings → Rules → Rulesets → "Bảo vệ main và develop"**, áp dụng cho `main` và `develop`:
 
@@ -276,3 +276,21 @@ Sau khi tạo PR, báo cho người dùng: link PR, và nhắc rằng khi 2 chec
 Mời 2 thành viên còn lại vào **Settings → Collaborators** với quyền *Write*.
 
 Không cài GitHub App của AI nào có quyền tự commit/push vào repo (ví dụ Claude GitHub App, Copilot coding agent), vì các app này commit dưới tên bot của chúng.
+
+
+## 9. Luồng bắt buộc cho mọi thay đổi sau lần khởi tạo
+
+Quy tắc này ưu tiên hơn mọi ngoại lệ release/hotfix trong các mục phía trên.
+Repo: https://github.com/NNA11111111/EV-ShareGrid.
+
+1. Lấy `origin/develop` mới nhất, tạo nhánh `feature/`, `fix/`, `chore/`, `docs/` hoặc `refactor/` từ đó.
+2. Commit trên nhánh làm việc, kiểm tra format, analyze và test, rồi push nhánh đó.
+3. Tạo PR từ nhánh làm việc vào `develop`. Chỉ merge sau khi các check bắt buộc đạt.
+4. Khi phát hành, tạo PR từ `develop` vào `main`. Dùng merge commit để giữ lịch sử và quan hệ giữa hai nhánh.
+5. Không commit/push trực tiếp vào `main` hoặc `develop`; không đưa nhánh tính năng, release hay hotfix trực tiếp vào `main`.
+6. Sửa lỗi khẩn cấp cũng phải qua nhánh `fix/` → PR `develop` → PR `main`.
+7. AI vẫn phải được người dùng đồng ý trước khi tạo PR hoặc merge PR, theo mục 7.
+
+Ngoại lệ duy nhất: lần nhập mã nguồn ban đầu ngày 24/11/2026 đang thực hiện theo yêu cầu chủ repo được phép khởi tạo `main` và `develop` cùng mốc. Ngoại lệ này không áp dụng cho các thay đổi về sau.
+
+Workflow `.github/workflows/pr-check.yml` kiểm tra đường đi của PR. Để GitHub chặn push trực tiếp, bảo vệ cả hai nhánh với yêu cầu PR và hai check `Quy ước Git`, `Format, analyze, test`, áp dụng cả quản trị viên, chặn force push và xóa nhánh.
